@@ -1,0 +1,62 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="https://js.chargebee.com/v2/chargebee.js"></script>
+    </head>
+    <body>
+        <h3>Checkout Drop-in</h3>
+        <button href="javascript:void(0)" onclick="openCheckout()">
+          Subscribe
+        </button>
+    </body>
+    <script>
+        var cbInstance, cart;
+
+        window.addEventListener('DOMContentLoaded', function() {
+            cbInstance = Chargebee.init({
+                site: "atarimbilling-test",
+                isItemsModel: true,
+            })
+
+            cbInstance.setCheckoutCallbacks(function(cart) {
+                return {
+                    success: function(hpid) {
+                        console.log('success', hpid)
+                    }
+                }
+            })
+
+            cart = cbInstance.getCart()
+        })
+
+        function openCheckout() {
+            const planPriceId = 'atarim-monthly-freelancer-10-websites' // Plan price point ID is used to identify the product 
+            const planPriceQuantity = 1
+            const product = cbInstance.initializeProduct(planPriceId, planPriceQuantity)
+            cart.replaceProduct(product);
+        
+            
+            
+            // Adding an addon
+            product.addAddon({ 
+              id: "silver-pass-USD-monthly",  // Addon price point ID
+              quantity: 2 
+            })
+    
+            // Adding a coupon
+            // product.addCoupon("fourty")
+    
+            // Dynamically changing Plan quantity using setPlanQuantity
+            product.setPlanQuantity(planPriceQuantity);
+      
+            // Removing Addons using removeAddon
+            product.removeAddon("silver-pass-USD-monthly"); // Addon price point ID
+            
+            // Passing values for custom fields
+            product.setCustomData({referral: "yes", corporate_agent: "no"});
+    
+            // Opening the checkout
+            cart.proceedToCheckout();
+        }
+    </script>
+</html>

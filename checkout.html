@@ -1,0 +1,153 @@
+<html>
+  <head>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://js.chargebee.com/v2/chargebee.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <a href="javascript:void(0)" id="cb-checkout">Sample Checkout</a>
+      <br />
+      <a href="javascript:void(0)" id="cb-portal">Sample Portal</a>
+      <br/>
+      
+    </div>
+    <script>
+      $(document).ready(function() {
+        var cbInstance = window.Chargebee.init({site: "atarimbilling-test"});
+
+        cbInstance.setPortalSession(() => {
+          // we have used axios for performing http requests
+          // Hit your end point that returns portal session object as response
+          // This sample end point will call the below api
+          // https://apidocs.chargebee.com/docs/api/portal_sessions#create_a_portal_session
+            return $.ajax({
+                method: "post",
+                url: "http://api.atarim.loc/billing/generate-portal-session"
+            }).then(response => response['result']);
+        });
+
+        $("#cb-checkout").on("click", function(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          cbInstance.openCheckout({
+              hostedPage: function() {
+                // Hit your end point that returns hosted page object as response
+                // This sample end point will call the below api
+                // You can pass hosted page object created as a result of checkout_new, checkout_existing, manage_payment_sources
+                // https://apidocs.chargebee.com/docs/api/hosted_pages#checkout_new_subscription
+                // https://apidocs.chargebee.com/docs/api/hosted_pages#checkout_existing_subscription
+                // https://apidocs.chargebee.com/docs/api/hosted_pages#manage_payment_sources
+                // If you want to use paypal, go cardless and plaid, pass embed parameter as false
+
+                return $.ajax({
+                  method: "post",
+                  url: "http://api.atarim.loc/billing/generate-hosted-page",
+                //   url: "http://localhost:8000/api/generate_checkout_new_url",
+                  data: {
+                    plan_id: "atarim-monthly-freelancer-10-websites"
+                  }
+                });
+              },
+              loaded: function() {
+                console.log("checkout opened");
+              },
+              close: function() {
+                  console.log("checkout closed");
+              },
+              success: function(hostedPageId) {
+                console.log(hostedPageId);
+                // Hosted page id will be unique token for the checkout that happened
+                // You can pass this hosted page id to your backend 
+                // and then call our retrieve hosted page api to get subscription details
+                // https://apidocs.chargebee.com/docs/api/hosted_pages#retrieve_a_hosted_page
+              },
+              step: function(value) {
+                  // value -> which step in checkout
+                  console.log(value);
+              }
+            });
+        });
+
+        $("#cb-portal").on("click", function(event) {
+          event.stopPropagation();
+          event.preventDefault();
+
+          cbInstance.openCheckout({
+            hostedPage: function() {
+              // required
+              // This function should return a promise, that will resolve a hosted page object
+              // If the library that you use for making ajax calls, can return a promise,
+              // you can directly return that.
+              // return new Promise(function(resolve, reject){
+              //   // This sampe response should be fetched as a result of an ajax call
+              //   var sampleResponse = {
+              //     "id": "8ajOxcuyG692GDy9yjnZ2hNM1ATugOFQl",
+              //     "type": "checkout_new",
+              //     "url": "http://api.atarim.loc/billing/generate-hosted-page",
+              //     "data": {
+              //       plan_id: "plan_4"
+              //     },
+              //     // "state": "created",
+              //     // "embed": true,
+              //     // "created_at": 1515494821,
+              //     // "expires_at": 1515498421
+              //   }
+              //   resolve(sampleResponse);
+              // });
+              return $.ajax({
+                  method: "post",
+                  url: "http://api.atarim.loc/billing/generate-hosted-page",
+                  data: {
+                    plan_id: "plan_4"
+                  }
+                });
+            },
+            loaded: function() {
+              // Optional
+              // will be called once checkout page is loaded
+            },
+            error: function(error) {
+              // Optional
+              // will be called if the promise passed causes an error
+            },
+            step: function(step) {
+              // Optional
+              // will be called for each step involved in the checkout process
+            },
+            success: function(hostedPageId) {
+              // Optional
+              // will be called when a successful checkout happens.
+              console.log("hostedPageId", hostedPageId);
+            },
+            close: function() {
+              // Optional
+              // will be called when the user closes the checkout modal box
+            }
+          })
+
+
+          // cbInstance.load('components').then(() => {
+          //   console.log("components loaded");
+          // });
+          // cbInstance.createChargebeePortal().open({
+          //   loaded: function() {
+          //     console.log("portal opened");
+          //   },
+          //   close: function() {
+
+          //   },
+          //   paymentSourceAdd: function(status) {
+          //     console.log("payment source add" + status);
+          //   },
+          //   paymentSourceUpdate: function(status) {
+          //     console.log("payment source update" + status);
+          //   },
+          //   paymentSourceRemove: function(status) {
+          //     console.log("payment source removed");
+          //   }
+          // })
+        });
+      });
+    </script>
+  </body>
+</html>
