@@ -15,16 +15,16 @@
       $(document).ready(function() {
         var cbInstance = window.Chargebee.init({site: "atarimbilling-test"});
 
-        cbInstance.setPortalSession(() => {
-          // we have used axios for performing http requests
-          // Hit your end point that returns portal session object as response
-          // This sample end point will call the below api
-          // https://apidocs.chargebee.com/docs/api/portal_sessions#create_a_portal_session
-            return $.ajax({
-                method: "post",
-                url: "http://api.atarim.loc/billing/generate-portal-session"
-            }).then(response => response['result']);
-        });
+        // cbInstance.setPortalSession(() => {
+        //   // we have used axios for performing http requests
+        //   // Hit your end point that returns portal session object as response
+        //   // This sample end point will call the below api
+        //   // https://apidocs.chargebee.com/docs/api/portal_sessions#create_a_portal_session
+        //     return $.ajax({
+        //         method: "post",
+        //         url: "http://api.atarim.loc/billing/generate-portal-session"
+        //     }).then(response => response['result']);
+        // });
 
         $("#cb-checkout").on("click", function(event) {
           event.preventDefault();
@@ -41,10 +41,13 @@
 
                 return $.ajax({
                   method: "post",
-                  url: "http://api.atarim.loc/billing/generate-hosted-page",
-                //   url: "http://localhost:8000/api/generate_checkout_new_url",
+                  url: "http://api.atarim.loc/billing/test-generate-hosted-page",
                   data: {
-                    plan_id: "atarim-monthly-freelancer-10-websites"
+                    plan_id: "agency-200-assets-15-users-usd-monthly-150",
+                    amount: 100,
+                    users: 11,
+                    rank: 3,
+                    cycle: "monthly",
                   }
                 });
               },
@@ -64,7 +67,11 @@
               step: function(value) {
                   // value -> which step in checkout
                   console.log(value);
-              }
+              },
+              error: function(error) {
+                // Optional
+                // will be called if the promise passed causes an error
+              },
             });
         });
 
@@ -72,80 +79,20 @@
           event.stopPropagation();
           event.preventDefault();
 
-          cbInstance.openCheckout({
-            hostedPage: function() {
-              // required
-              // This function should return a promise, that will resolve a hosted page object
-              // If the library that you use for making ajax calls, can return a promise,
-              // you can directly return that.
-              // return new Promise(function(resolve, reject){
-              //   // This sampe response should be fetched as a result of an ajax call
-              //   var sampleResponse = {
-              //     "id": "8ajOxcuyG692GDy9yjnZ2hNM1ATugOFQl",
-              //     "type": "checkout_new",
-              //     "url": "http://api.atarim.loc/billing/generate-hosted-page",
-              //     "data": {
-              //       plan_id: "plan_4"
-              //     },
-              //     // "state": "created",
-              //     // "embed": true,
-              //     // "created_at": 1515494821,
-              //     // "expires_at": 1515498421
-              //   }
-              //   resolve(sampleResponse);
-              // });
-              return $.ajax({
-                  method: "post",
-                  url: "http://api.atarim.loc/billing/generate-hosted-page",
-                  data: {
-                    plan_id: "plan_4"
-                  }
-                });
-            },
-            loaded: function() {
-              // Optional
-              // will be called once checkout page is loaded
-            },
-            error: function(error) {
-              // Optional
-              // will be called if the promise passed causes an error
-            },
-            step: function(step) {
-              // Optional
-              // will be called for each step involved in the checkout process
-            },
-            success: function(hostedPageId) {
-              // Optional
-              // will be called when a successful checkout happens.
-              console.log("hostedPageId", hostedPageId);
-            },
-            close: function() {
-              // Optional
-              // will be called when the user closes the checkout modal box
-            }
-          })
+          // Set portal session from browser
+          cbInstance.setPortalSession(function () {
+            // We will discuss on how to implement this end point below.
+            return $.ajax({
+              url: 'http://api.atarim.loc/billing/test-create-portal-session',
+              method: 'POST'
+            });
+          });
+          // Create chargebee portal 
+          const cbPortal = cbInstance.createChargebeePortal();
 
-
-          // cbInstance.load('components').then(() => {
-          //   console.log("components loaded");
-          // });
-          // cbInstance.createChargebeePortal().open({
-          //   loaded: function() {
-          //     console.log("portal opened");
-          //   },
-          //   close: function() {
-
-          //   },
-          //   paymentSourceAdd: function(status) {
-          //     console.log("payment source add" + status);
-          //   },
-          //   paymentSourceUpdate: function(status) {
-          //     console.log("payment source update" + status);
-          //   },
-          //   paymentSourceRemove: function(status) {
-          //     console.log("payment source removed");
-          //   }
-          // })
+          cbPortal.openSection({
+            sectionType: Chargebee.getPortalSections().ACCOUNT_DETAILS
+          });
         });
       });
     </script>
